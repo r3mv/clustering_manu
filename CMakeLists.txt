@@ -4,8 +4,9 @@ project(clustering_manu)            # this sets the project name
 # These instructions search the directory tree when cmake is
 # invoked and put all files that match the pattern in the variables 
 # `sources` and `data`.
-file(GLOB_RECURSE sources *.cpp *.hpp)
+set(sources main.cpp)
 
 
-add_executable(clusteringManu main.cpp ${sources})
+add_executable(clusteringManu ${sources})
+target_link_libraries(clusteringManu -lm)
 
