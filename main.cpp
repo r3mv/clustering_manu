@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -5,7 +6,6 @@
 #include <cmath>
 #include <limits>
 
-const std::string DATA_FILE = "data.csv";
 const int MAX_CLUSTER_SIZE = 26;
 const char SEPARATOR = ';';
 const int LATITUDE_COLUMN_INDEX = 16;
@@ -20,16 +20,20 @@ importData(const std::string &filename,
   longitudes_degree.clear();
   std::string buffer;
   std::ifstream infile(filename);
-  while (infile.good()) {
-    infile >> buffer;
+  while (std::getline(infile, buffer)) {
     std::stringstream ss(buffer);
     std::vector<std::string> split;
     std::string val;
     while (std::getline(ss, val, SEPARATOR)) {
       split.push_back(val);
     }
-    double lat_degree = std::stod(split.at(LATITUDE_COLUMN_INDEX));
-    double lon_degree = std::stod(split.at(LONGITUDE_COLUMN_INDEX));
+    // read coordinates replace , with .
+    std::string &lat_str = split.at(LATITUDE_COLUMN_INDEX);
+    std::replace(lat_str.begin(), lat_str.end(), ',','.');
+    std::string &lon_str = split.at(LONGITUDE_COLUMN_INDEX);
+    std::replace(lon_str.begin(), lon_str.end(), ',','.');
+    double lat_degree = std::stod(lat_str);
+    double lon_degree = std::stod(lon_str);
     latitudes_degree.push_back(lat_degree);
     longitudes_degree.push_back(lon_degree);
   }
@@ -75,7 +79,7 @@ computeDistances(const std::vector<double> &latitudes_degree,
     for (int j = 0; j < i; ++j) {
       // assume data is lat/lon coordinates, compute distances in m between the points
       double d = distanceInMeters(latitudes_degree[i], longitudes_degree[i],
-						latitudes_degree[j], longitudes_degree[j]);
+				  latitudes_degree[j], longitudes_degree[j]);
       distances_meter[i][j] = distances_meter[j][i] = d;
     }
   }
@@ -92,22 +96,36 @@ computeClustering(const std::vector<std::vector<double>>& distances,
 int
 main(int argc,char **argv){
 
-  int numRows = -1;
-  int numCols = -1;
-  std::vector<double> latitudes_degree;
-  std::vector<double> longitudes_degree;
-  importData(DATA_FILE, latitudes_degree, longitudes_degree);
-
-  std::vector<std::vector<double>> distances; // unoptimized n² distance matrix
-  computeDistances(latitudes_degree, longitudes_degree, distances);
-
-  std::vector<int> clusters(numRows);
-  for (int i = 0;i < numRows;++i){
-    clusters[i] = i;
+  if (argc < 2) {
+    std::cout << "Usage: " << argv[0] << " <data_file>" << std::endl;
+    return EXIT_SUCCESS;
   }
+  try {
+    std::cout<< distanceInMeters(44.531082109, -0.341531541732,
+				44.4230431057, -0.540077855567) << std::endl;
 
-  computeClustering(distances, clusters, MAX_CLUSTER_SIZE);
+    const std::string dataFile = argv[1];
 
-  return 0;
+    std::vector<double> latitudes_degree;
+    std::vector<double> longitudes_degree;
+    importData(dataFile, latitudes_degree, longitudes_degree);
+    int numElements = latitudes_degree.size();
+    
+    std::vector<std::vector<double>> distances; // unoptimized n² distance matrix
+    computeDistances(latitudes_degree, longitudes_degree, distances);
 
+    std::vector<int> clusters(numElements);
+    for (int i = 0;i < numElements;++i){
+      clusters[i] = i;
+    }
+
+    computeClustering(distances, clusters, MAX_CLUSTER_SIZE);
+    return EXIT_SUCCESS;
+  }
+  catch (std::exception &e) {
+    std::cerr << "Exception raised:" << e.what();
+    return EXIT_FAILURE;
+  }
+  
+  
 }
