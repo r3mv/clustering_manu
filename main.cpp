@@ -86,11 +86,81 @@ computeDistances(const std::vector<double> &latitudes_degree,
 }
 		 
 
-void
-computeClustering(const std::vector<std::vector<double>>& distances,
-		  std::vector<int> &clusters,
-		  int maxSize) {
+struct Merge {
+  int index1;
+  int index2;
+  double distance;
 
+  Merge(int index1 = -1,
+	int index2 = -1,
+	double distance = std::numeric_limits<double>::max()):
+    index1(index1),
+    index2(index2),
+    distance(distance)
+  {}
+
+  virtual
+  ~Merge(){}
+};
+
+
+double
+findMin(const std::vector<std::vector<double>> &distances,
+	int &i1,
+	int &i2){
+
+  int numElem = distances.size();
+  double min = std::numeric_limits<double>::max();
+  for (int i = 1; i < numElem; ++i) {
+    for(int j =0; j < i; ++j) {
+      if (distances[i][j] < min) {
+	min = distances[i][j];
+	i1 = j;
+	i2 = i;
+      }
+    }
+  }
+  return min;
+}
+
+void
+updateDistanceMatrix(std::vector<std::vector<double>> &distances,
+		     const Merge &m) {
+  distances[m.index1][m.index2] = distances[m.index2][m.index1] = std::numeric_limits<double>::max();
+  int numElem = distances.size();
+  double min = std::numeric_limits<double>::max();
+  for (int i = 0; i < numElem;++i) {
+    min = std::min(std::min(min, distances[m.index1][i]), distances[m.index2][i]);
+  }
+  for (int i = 0; i < numElem; ++i) {
+    if (distances[i][m.index1] != std::numeric_limits<double>::max()) {
+      distances[i][m.index1] = distances[m.index1][i] = min;
+    }
+    if (distances[i][m.index2] != std::numeric_limits<double>::max()) {
+      distances[i][m.index2] = distances[m.index2][i] = min;
+    }
+  }
+}
+
+
+/**
+ * Agglomerative hierachical clustering based on distances
+ * with single linkage
+ */
+void
+computeLinkage(std::vector<std::vector<double>>& distances,
+		  std::vector<Merge> &linkages) {
+
+  int i1 = -1;
+  int i2 = -1;
+  int numElem = distances[0].size();
+  linkages.clear();
+  while(linkages.size() != numElem-1) {
+    double minDist = findMin(distances, i1,i2);
+    Merge m(i1, i2, minDist);
+    updateDistanceMatrix(distances, m);
+    linkages.push_back(m);
+  }
 }
 
 int
@@ -119,7 +189,8 @@ main(int argc,char **argv){
       clusters[i] = i;
     }
 
-    computeClustering(distances, clusters, MAX_CLUSTER_SIZE);
+    std::vector<Merge> linkages;
+    computeLinkage(distances, linkages);
     return EXIT_SUCCESS;
   }
   catch (std::exception &e) {
