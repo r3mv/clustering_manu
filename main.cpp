@@ -8,16 +8,16 @@
 const std::string DATA_FILE = "data.csv";
 const int MAX_CLUSTER_SIZE = 26;
 const char SEPARATOR = ';';
+const int LATITUDE_COLUMN_INDEX = 16;
+const int LONGITUDE_COLUMN_INDEX = 17;
   
 
 void
 importData(const std::string &filename,
-	   std::vector<double> &data,
-	   int &numRows,
-	   int &numCols) {
-
-  numCols = 2;
-  numRows = 0;
+	   std::vector<double> &latitudes_degree,
+	   std::vector<double> &longitudes_degree) {
+  latitudes_degree.clear();
+  longitudes_degree.clear();
   std::string buffer;
   std::ifstream infile(filename);
   while (infile.good()) {
@@ -28,15 +28,10 @@ importData(const std::string &filename,
     while (std::getline(ss, val, SEPARATOR)) {
       split.push_back(val);
     }
-    if (!split.size() == 18) {
-      throw std::runtime_error("Expected 18 values");
-    } else {
-      double lat = std::stod(split[16]);
-      double lon = std::stod(split[17]);
-      data.push_back(lat);
-      data.push_back(lon);
-      numRows++;
-    }
+    double lat_degree = std::stod(split.at(LATITUDE_COLUMN_INDEX));
+    double lon_degree = std::stod(split.at(LONGITUDE_COLUMN_INDEX));
+    latitudes_degree.push_back(lat_degree);
+    longitudes_degree.push_back(lon_degree);
   }
   infile.close();
 }
@@ -71,23 +66,24 @@ distanceInMeters(double lat1_degree, double lon1_degree,
 }
 
 void
-computeDistances(const std::vector<double> &data,
-		 int numRows,
-		 int numCols,
-		 std::vector<double> &distances) {
-  distances = std::vector<double>(data.size(), -std::numeric_limits<double>::max());
-  for (int i = 1; i < numRows; ++i) {
+computeDistances(const std::vector<double> &latitudes_degree,
+		 const std::vector<double> &longitudes_degree,
+		 std::vector<std::vector<double>> &distances_meter) {
+  distances_meter = std::vector<std::vector<double>>(latitudes_degree.size(),
+						     std::vector<double>(latitudes_degree.size(),std::numeric_limits<double>::max()));
+  for (int i = 1; i < latitudes_degree.size(); ++i) {
     for (int j = 0; j < i; ++j) {
       // assume data is lat/lon coordinates, compute distances in m between the points
-      
-      
+      double d = distanceInMeters(latitudes_degree[i], longitudes_degree[i],
+						latitudes_degree[j], longitudes_degree[j]);
+      distances_meter[i][j] = distances_meter[j][i] = d;
     }
   }
 }
 		 
 
 void
-computeClustering(const std::vector<double> distances,
+computeClustering(const std::vector<std::vector<double>>& distances,
 		  std::vector<int> &clusters,
 		  int maxSize) {
 
@@ -98,11 +94,12 @@ main(int argc,char **argv){
 
   int numRows = -1;
   int numCols = -1;
-  std::vector<double> data;
-  importData(DATA_FILE, data, numRows, numCols);
+  std::vector<double> latitudes_degree;
+  std::vector<double> longitudes_degree;
+  importData(DATA_FILE, latitudes_degree, longitudes_degree);
 
-  std::vector<double> distances;
-  computeDistances(data, numRows, numCols, distances);
+  std::vector<std::vector<double>> distances; // unoptimized n² distance matrix
+  computeDistances(latitudes_degree, longitudes_degree, distances);
 
   std::vector<int> clusters(numRows);
   for (int i = 0;i < numRows;++i){
