@@ -1,3 +1,4 @@
+#include <regex>
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -9,6 +10,9 @@
 
 const int MAX_CLUSTER_SIZE = 26;
 const char SEPARATOR = ';';
+const int LAST_NAME_COLUMN_INDEX = 2;
+const int FIRST_NAME_COLUMN_INDEX = 3;
+const int EMAIL_COLUMN_INDEX = 12;
 const int LATITUDE_COLUMN_INDEX = 16;
 const int LONGITUDE_COLUMN_INDEX = 17;
   
@@ -39,6 +43,48 @@ importData(const std::string &filename,
     longitudes_degree.push_back(lon_degree);
   }
   infile.close();
+}
+
+void
+exportDataToJson(const std::string &infilename, const std::string &outfilename) {
+  std::ifstream infile(infilename);
+  std::ofstream outfile(outfilename);
+  outfile << "var dataPoints = [";
+  bool first = true;
+  std::string buffer;
+  while (std::getline(infile, buffer)) {
+    if (first) {
+      first = false;
+    } else {
+       outfile << ",";
+    }
+    std::stringstream ss(buffer);
+    std::vector<std::string> split;
+    std::string val;
+    while (std::getline(ss, val, SEPARATOR)) {
+      split.push_back(val);
+    }
+    std::string &firstName = split.at(FIRST_NAME_COLUMN_INDEX);
+    std::string &lastName = split.at(LAST_NAME_COLUMN_INDEX);
+    std::string &email = split.at(EMAIL_COLUMN_INDEX);
+    std::string &lat_str = split.at(LATITUDE_COLUMN_INDEX);
+    std::replace(lat_str.begin(), lat_str.end(), ',','.');
+    std::string &lon_str = split.at(LONGITUDE_COLUMN_INDEX);
+    std::replace(lon_str.begin(), lon_str.end(), ',','.');
+    double lat_degree = std::stod(lat_str);
+    double lon_degree = std::stod(lon_str);
+    outfile << "{ "
+	    << "firstName : \'" << firstName << "\',"
+	    << "lastName : \'" << lastName << "\',"
+	    << "email : \'" << email << "\',"
+	    << "latitude : " << lat_degree << ","
+	    << "longitude : " << lon_degree
+	    << "}";
+  }
+  infile.close();
+  outfile << "];";
+  outfile.close();
+  
 }
 
 
@@ -204,6 +250,8 @@ main(int argc,char **argv){
     // 				44.4230431057, -0.540077855567) << std::endl;
 
     const std::string dataFile = argv[1];
+    const std::string jsonDataFile = std::regex_replace(dataFile, std::regex("\\.csv"), ".js");
+    exportDataToJson(dataFile, jsonDataFile);
 
     std::vector<double> latitudes_degree;
     std::vector<double> longitudes_degree;
