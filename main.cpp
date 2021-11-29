@@ -56,7 +56,7 @@ exportDataToJson(const std::string &infilename, const std::string &outfilename) 
     if (first) {
       first = false;
     } else {
-       outfile << ",";
+      outfile << "," << std::endl;
     }
     std::stringstream ss(buffer);
     std::vector<std::string> split;
@@ -74,8 +74,8 @@ exportDataToJson(const std::string &infilename, const std::string &outfilename) 
     double lat_degree = std::stod(lat_str);
     double lon_degree = std::stod(lon_str);
     outfile << "{ "
-	    << "firstName : \'" << firstName << "\',"
-	    << "lastName : \'" << lastName << "\',"
+	    << "firstName : \"" << firstName << "\","
+	    << "lastName : \"" << lastName << "\","
 	    << "email : \'" << email << "\',"
 	    << "latitude : " << lat_degree << ","
 	    << "longitude : " << lon_degree
