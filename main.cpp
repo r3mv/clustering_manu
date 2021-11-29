@@ -93,9 +93,9 @@ exportDataToGeoJson(const std::string &infilename, const std::string &outfilenam
   std::ifstream infile(infilename);
   std::ofstream outfile(outfilename);
   outfile << "var geoData = {" << std::endl
-	  << "\"type\": \"FeatureCollection\","
+	  << "\"type\": \"FeatureCollection\"," << std::endl
 	  << "\"features\": [" << std::endl;
-
+  
   int cpt = 0;
   bool first = true;
   std::string buffer;
@@ -122,9 +122,9 @@ exportDataToGeoJson(const std::string &infilename, const std::string &outfilenam
     double lon_degree = std::stod(lon_str);
     outfile << "{ " << std::endl
 	    << "\"type\": \"Feature\"," << std::endl
-	    << "\"id\": " << cpt++ << std::endl
+	    << "\"id\": " << cpt++  << "," << std::endl
 	    << "\"geometry\": {" << std::endl
-	    << "    \"type\": \"Point\","
+	    << "    \"type\": \"Point\"," << std::endl
 	    << "    \"coordinates\": [" << lat_degree << "," << lon_degree << "]" << std::endl
 	    << "}," << std::endl
 	    << "\"properties\": {" << std::endl
@@ -135,7 +135,7 @@ exportDataToGeoJson(const std::string &infilename, const std::string &outfilenam
       	    << "}" << std::endl;
   }
   infile.close();
-  outfile << "];";
+  outfile << "]};";
   outfile.close();
   
 }
