@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <deque>
 #include <cmath>
 #include <limits>
 
@@ -125,19 +126,31 @@ findMin(const std::vector<std::vector<double>> &distances,
 
 void
 updateDistanceMatrix(std::vector<std::vector<double>> &distances,
-		     const Merge &m) {
+		     const Merge &m,
+		     std::vector<std::deque<int>> &clusters) {
   distances[m.index1][m.index2] = distances[m.index2][m.index1] = std::numeric_limits<double>::max();
-  int numElem = distances.size();
-  double min = std::numeric_limits<double>::max();
-  for (int i = 0; i < numElem;++i) {
-    min = std::min(std::min(min, distances[m.index1][i]), distances[m.index2][i]);
-  }
-  for (int i = 0; i < numElem; ++i) {
-    if (distances[i][m.index1] != std::numeric_limits<double>::max()) {
-      distances[i][m.index1] = distances[m.index1][i] = min;
-    }
-    if (distances[i][m.index2] != std::numeric_limits<double>::max()) {
-      distances[i][m.index2] = distances[m.index2][i] = min;
+  // merge elements of index2 cluster into index1
+  std::copy(clusters[m.index2].begin(), clusters[m.index2].end(),std::back_inserter(clusters[m.index1]));
+  clusters[m.index2].clear();
+
+  // compute minimal distance from cluster 1 to other clusters
+  // and update distance matrix
+  const std::deque<int> &cluster1=clusters[m.index1];
+  for (int i = 0; i < clusters.size(); ++i) {
+    if (i != m.index1) {
+      const std::deque<int> &clusterX = clusters[i];
+      double min = std::numeric_limits<double>::max();
+      for (int elemX : clusterX) {
+	for (int elemOfCluster1 : cluster1) {
+	  min = std::min(min, distances[elemX][elemOfCluster1]);
+	}
+      }
+      // update distance matrix from cluster 1 to cluster X
+      for (int elemX : clusterX) {
+	for (int elemOfCluster1 : cluster1) {
+	  distances[elemX][elemOfCluster1] = distances[elemOfCluster1][elemX] = min;
+	}
+      }
     }
   }
 }
@@ -155,10 +168,14 @@ computeLinkage(std::vector<std::vector<double>>& distances,
   int i2 = -1;
   int numElem = distances[0].size();
   linkages.clear();
+  std::vector<std::deque<int>> clusters(numElem);
+  for (int i = 0;i < numElem; ++i) {
+    clusters[i].push_back(i);
+  }
   while(linkages.size() != numElem-1) {
     double minDist = findMin(distances, i1,i2);
     Merge m(i1, i2, minDist);
-    updateDistanceMatrix(distances, m);
+    updateDistanceMatrix(distances, m, clusters);
     linkages.push_back(m);
   }
 }
@@ -171,8 +188,8 @@ main(int argc,char **argv){
     return EXIT_SUCCESS;
   }
   try {
-    std::cout<< distanceInMeters(44.531082109, -0.341531541732,
-				44.4230431057, -0.540077855567) << std::endl;
+    // std::cout<< distanceInMeters(44.531082109, -0.341531541732,
+    // 				44.4230431057, -0.540077855567) << std::endl;
 
     const std::string dataFile = argv[1];
 
