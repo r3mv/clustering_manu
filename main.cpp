@@ -102,6 +102,11 @@ struct Merge {
 
   virtual
   ~Merge(){}
+
+  friend std::ostream& operator<<(std::ostream &out, const Merge& m) {
+    out << m.index1 << " " << m.index2 << ":" << m.distance;
+    return out;
+  }
 };
 
 
@@ -128,9 +133,16 @@ void
 updateDistanceMatrix(std::vector<std::vector<double>> &distances,
 		     const Merge &m,
 		     std::vector<std::deque<int>> &clusters) {
-  distances[m.index1][m.index2] = distances[m.index2][m.index1] = std::numeric_limits<double>::max();
   // merge elements of index2 cluster into index1
+  // 1. update distance matrix to large value for elements in the same cluster
+  for (int index1 : clusters[m.index1]) {
+    for (int index2 : clusters[m.index2]) {
+      distances[index1][index2] = distances[index2][index1] = std::numeric_limits<double>::max();
+    }
+  }
+  // 2. copy element list
   std::copy(clusters[m.index2].begin(), clusters[m.index2].end(),std::back_inserter(clusters[m.index1]));
+  // 3. merge old cluster
   clusters[m.index2].clear();
 
   // compute minimal distance from cluster 1 to other clusters
@@ -201,13 +213,12 @@ main(int argc,char **argv){
     std::vector<std::vector<double>> distances; // unoptimized n² distance matrix
     computeDistances(latitudes_degree, longitudes_degree, distances);
 
-    std::vector<int> clusters(numElements);
-    for (int i = 0;i < numElements;++i){
-      clusters[i] = i;
-    }
-
     std::vector<Merge> linkages;
     computeLinkage(distances, linkages);
+    int cpt = 0;
+    for (Merge &m : linkages) {
+      std::cout << "Merge " << ++cpt << "=" << m << std::endl;
+    }
     return EXIT_SUCCESS;
   }
   catch (std::exception &e) {
