@@ -43,7 +43,11 @@
 	  layer.bindPopup(popupContent);
       }
 
-      var unused = L.geoJSON(geoData).addTo(map);
+      var unused = L.geoJSON(geoData,
+			     {
+				 onEachFeature: onEachFeature
+			     }
+			    ).addTo(map);
       
       
       </script>
