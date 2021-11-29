@@ -125,7 +125,7 @@ exportDataToGeoJson(const std::string &infilename, const std::string &outfilenam
 	    << "\"id\": " << cpt++  << "," << std::endl
 	    << "\"geometry\": {" << std::endl
 	    << "    \"type\": \"Point\"," << std::endl
-	    << "    \"coordinates\": [" << lat_degree << "," << lon_degree << "]" << std::endl
+	    << "    \"coordinates\": [" << lon_degree << "," << lat_degree << "]" << std::endl
 	    << "}," << std::endl
 	    << "\"properties\": {" << std::endl
 	    << "\"firstName\" : \"" << firstName << "\"," << std::endl
