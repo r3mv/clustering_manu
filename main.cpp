@@ -88,6 +88,58 @@ exportDataToJson(const std::string &infilename, const std::string &outfilename) 
 }
 
 
+void
+exportDataToGeoJson(const std::string &infilename, const std::string &outfilename) {
+  std::ifstream infile(infilename);
+  std::ofstream outfile(outfilename);
+  outfile << "var geoData = {" << std::endl
+	  << "\"type\": \"FeatureCollection\","
+	  << "\"features\": [" << std::endl;
+
+  int cpt = 0;
+  bool first = true;
+  std::string buffer;
+  while (std::getline(infile, buffer)) {
+    if (first) {
+      first = false;
+    } else {
+      outfile << "," << std::endl;
+    }
+    std::stringstream ss(buffer);
+    std::vector<std::string> split;
+    std::string val;
+    while (std::getline(ss, val, SEPARATOR)) {
+      split.push_back(val);
+    }
+    std::string &firstName = split.at(FIRST_NAME_COLUMN_INDEX);
+    std::string &lastName = split.at(LAST_NAME_COLUMN_INDEX);
+    std::string &email = split.at(EMAIL_COLUMN_INDEX);
+    std::string &lat_str = split.at(LATITUDE_COLUMN_INDEX);
+    std::replace(lat_str.begin(), lat_str.end(), ',','.');
+    std::string &lon_str = split.at(LONGITUDE_COLUMN_INDEX);
+    std::replace(lon_str.begin(), lon_str.end(), ',','.');
+    double lat_degree = std::stod(lat_str);
+    double lon_degree = std::stod(lon_str);
+    outfile << "{ " << std::endl
+	    << "\"type\": \"Feature\"," << std::endl
+	    << "\"id\": " << cpt++ << std::endl
+	    << "\"geometry\": {" << std::endl
+	    << "    \"type\": \"Point\","
+	    << "    \"coordinates\": [" << lat_degree << "," << lon_degree << "]" << std::endl
+	    << "}," << std::endl
+	    << "\"properties\": {" << std::endl
+	    << "\"firstName\" : \"" << firstName << "\"," << std::endl
+	    << "\"lastName\" : \"" << lastName << "\"," << std::endl
+	    << "\"email\" : \"" << email << "\"" << std::endl
+	    << "}" << std::endl
+      	    << "}" << std::endl;
+  }
+  infile.close();
+  outfile << "];";
+  outfile.close();
+  
+}
+
 double degToRad(double val_degree) {
   return val_degree * M_PI / 180;
 }
@@ -253,6 +305,10 @@ main(int argc,char **argv){
     const std::string jsonDataFile = std::regex_replace(dataFile, std::regex("\\.csv"), ".js");
     exportDataToJson(dataFile, jsonDataFile);
 
+    const std::string jsonGeoData = "geodata.js";
+    exportDataToGeoJson(dataFile, jsonGeoData);
+
+    
     std::vector<double> latitudes_degree;
     std::vector<double> longitudes_degree;
     importData(dataFile, latitudes_degree, longitudes_degree);
