@@ -10,13 +10,13 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="clustering.js" type="text/javascript"></script>
+    <script src="geodata.js" type="text/javascript"> </script>
   </head>
   <body>
-    <script src="geodata.js" type="text/javascript"> </script>
     <h1>Clustering pour manu</h1>
     <div id="map" style="width: 640px;height: 480px;"></div>
     <div>
-      <form oninput="formuleIciOuAppelFunction" onsubmit="callClustering(input_num_min.valueAsNumber, input_num_max.valueAsNumber,weight_routing_distance.valueAsNumber,weight_flying_distance.valueAsNumber,weight_ien_group_distance.valueAsNumber)">
+      <form onsubmit="callClustering(input_num_min.valueAsNumber, input_num_max.valueAsNumber,weight_routing_distance.valueAsNumber,weight_flying_distance.valueAsNumber,weight_ien_group_distance.valueAsNumber)">
 	<div>
 	  <label> Nombre de personnes minimal par groupe:</label>
 	  <input type="number" id="input_num_min" name="input_num_min" min="0" max="50" required/>
@@ -40,79 +40,63 @@
 	<div>
 	  <input type="submit" value="lancer le clustering">
 	</div>
-	</form>
+      </form>
     </div>
 
     <div>
-    <table class="table table-hover">
-      <thead>
-	<tr>
-	  <th scope="col">#</th>
-	  <th scope="col">Prénom</th>
-	  <th scope="col">Nom</th>
-	  <th scope="col">email</th>
-	</tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
-    <div>
-      <script>
-      var map = L.map('map').setView([44.85, -0.54], 9);
-      
-      var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-	  maxZoom: 18,
-	  attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-	      'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-	  id: 'mapbox/streets-v11',
-	  tileSize: 512,
-	  zoomOffset: -1
-      }).addTo(map);
+      <table class="table table-hover">
+	<thead>
+	  <tr>
+	    <th scope="col">#</th>
+	    <th scope="col">Prénom</th>
+	    <th scope="col">Nom</th>
+	    <th scope="col">email</th>
+	  </tr>
+	</thead>
+	<tbody>
+	</tbody>
+      </table>
+      <div>
+	<script>
+	  var map = L.map('map').setView([44.85, -0.54], 9);
+	  
+	  var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+	      maxZoom: 18,
+	      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+		  'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+	      id: 'mapbox/streets-v11',
+	      tileSize: 512,
+	      zoomOffset: -1
+	  }).addTo(map);
 
-      var index = 0;
-      var tableContent = "";
-      
-      function onEachFeature(feature, layer) {
-	  var popupContent = "";
-	  if (feature.properties && feature.properties.firstName) {
-	      popupContent += "<p> #"
-		  + (index)
-		  + " "
-		  + feature.properties.firstName
-		  + " "
-		  + feature.properties.lastName
-		  + "</p>";
+	  var index = 0;
+	  var tableContent = "";
+	  
+	  function onEachFeature(feature, layer) {
+	      var popupContent = "";
+	      if (feature.properties && feature.properties.firstName) {
+		  popupContent += "<p> #"
+		      + (index)
+		      + " "
+		      + feature.properties.firstName
+		      + " "
+		      + feature.properties.lastName
+		      + "</p>";
+	      }
+	      if (feature.properties && feature.properties.email) {
+		  popupContent += "<p>" + feature.properties.email + "</p>";
+	      }
+	      // console.log(popupContent);
+	      layer.bindPopup(popupContent);
+	      tableContent += "<tr><td>"+ (index++) + "</td><td>"+feature.properties.firstName+"</td><td>"+feature.properties.lastName+"</td><td>"+feature.properties.email+"</td></tr>";
 	  }
-	  if (feature.properties && feature.properties.email) {
-	      popupContent += "<p>" + feature.properties.email + "</p>";
-	  }
-	  console.log(popupContent);
-	  layer.bindPopup(popupContent);
-	  tableContent += "<tr><td>"+ (index++) + "</td><td>"+feature.properties.firstName+"</td><td>"+feature.properties.lastName+"</td><td>"+feature.properties.email+"</td></tr>";
-      }
 
-      var unused = L.geoJSON(geoData,
-			     {
-				 onEachFeature: onEachFeature
-			     }
-			    ).addTo(map);
+	  var unused = L.geoJSON(geoData,
+				 {
+				     onEachFeature: onEachFeature
+				 }
+				).addTo(map);
+	  </script>
 
-	function updatePartition(index) {
-	    console.log(index);
-	    $("#rangeValue").html(index);
-	}
-	
-	$("table tr:first").after(tableContent);
-	$("#range").prop({min:0,
-			  max: index-1,
-			 });
-	$("#range").onchange=updatePartition($("#range").value);
-
-
-
-	
-	
-      </script>
-
-</body>
+  </body>
 </html>
