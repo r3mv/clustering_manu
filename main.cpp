@@ -8,21 +8,22 @@
 #include <cmath>
 #include <limits>
 
+#include "PersonInfo.hpp"
+
 const int MAX_CLUSTER_SIZE = 26;
 const char SEPARATOR = ';';
 const int LAST_NAME_COLUMN_INDEX = 2;
 const int FIRST_NAME_COLUMN_INDEX = 3;
 const int EMAIL_COLUMN_INDEX = 12;
+const int IEN_COLUMN_INDEX=13;
 const int LATITUDE_COLUMN_INDEX = 16;
 const int LONGITUDE_COLUMN_INDEX = 17;
   
 
 void
 importData(const std::string &filename,
-	   std::vector<double> &latitudes_degree,
-	   std::vector<double> &longitudes_degree) {
-  latitudes_degree.clear();
-  longitudes_degree.clear();
+	   std::vector<PersonInfo> &persons){
+  persons.clear();
   std::string buffer;
   std::ifstream infile(filename);
   while (std::getline(infile, buffer)) {
@@ -33,14 +34,18 @@ importData(const std::string &filename,
       split.push_back(val);
     }
     // read coordinates replace , with .
+    std::string &firstName = split.at(FIRST_NAME_COLUMN_INDEX);
+    std::string &lastName = split.at(LAST_NAME_COLUMN_INDEX);
+    std::string &email = split.at(EMAIL_COLUMN_INDEX);
+    std::string &ienCode = split.at(IEN_COLUMN_INDEX);
     std::string &lat_str = split.at(LATITUDE_COLUMN_INDEX);
     std::replace(lat_str.begin(), lat_str.end(), ',','.');
     std::string &lon_str = split.at(LONGITUDE_COLUMN_INDEX);
     std::replace(lon_str.begin(), lon_str.end(), ',','.');
     double lat_degree = std::stod(lat_str);
     double lon_degree = std::stod(lon_str);
-    latitudes_degree.push_back(lat_degree);
-    longitudes_degree.push_back(lon_degree);
+    persons.push_back(PersonInfo(firstName, lastName, email, ienCode, lat_degree, lon_degree));
+
   }
   infile.close();
 }
@@ -169,16 +174,14 @@ distanceInMeters(double lat1_degree, double lon1_degree,
 }
 
 void
-computeDistances(const std::vector<double> &latitudes_degree,
-		 const std::vector<double> &longitudes_degree,
+computeDistances(const std::vector<PersonInfo>&persons,
 		 std::vector<std::vector<double>> &distances_meter) {
-  distances_meter = std::vector<std::vector<double>>(latitudes_degree.size(),
-						     std::vector<double>(latitudes_degree.size(),std::numeric_limits<double>::max()));
-  for (int i = 1; i < latitudes_degree.size(); ++i) {
+  distances_meter = std::vector<std::vector<double>>(persons.size(),
+						     std::vector<double>(persons.size(),std::numeric_limits<double>::max()));
+  for (int i = 1; i < persons.size(); ++i) {
     for (int j = 0; j < i; ++j) {
       // assume data is lat/lon coordinates, compute distances in m between the points
-      double d = distanceInMeters(latitudes_degree[i], longitudes_degree[i],
-				  latitudes_degree[j], longitudes_degree[j]);
+      double d = persons.at(j).flyweightDistance(persons.at(i));
       distances_meter[i][j] = distances_meter[j][i] = d;
     }
   }
@@ -308,14 +311,13 @@ main(int argc,char **argv){
     const std::string jsonGeoData = "geodata.js";
     exportDataToGeoJson(dataFile, jsonGeoData);
 
-    
-    std::vector<double> latitudes_degree;
-    std::vector<double> longitudes_degree;
-    importData(dataFile, latitudes_degree, longitudes_degree);
-    int numElements = latitudes_degree.size();
+
+    std::vector<PersonInfo> persons;
+    importData(dataFile, persons);
+    int numElements = persons.size();
     
     std::vector<std::vector<double>> distances; // unoptimized n² distance matrix
-    computeDistances(latitudes_degree, longitudes_degree, distances);
+    computeDistances(persons, distances);
 
     std::vector<Merge> linkages;
     computeLinkage(distances, linkages);

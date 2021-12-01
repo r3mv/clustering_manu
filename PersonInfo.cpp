@@ -17,7 +17,7 @@ PersonInfo::PersonInfo(const string &firstName,
 
 
 double
-PersonInfo::flyweightDistance(const PersonInfo &other){
+PersonInfo::flyweightDistance(const PersonInfo &other) const{
   return ::flyweightDistance(other.m_latitude,
 			   other.m_longitude,
 			   m_latitude,
@@ -25,12 +25,12 @@ PersonInfo::flyweightDistance(const PersonInfo &other){
 }
 
 double
-PersonInfo::routingDistance(const PersonInfo &other){
+PersonInfo::routingDistance(const PersonInfo &other) const {
   return 0.0;
 }
 
 double
-PersonInfo::ienDistance(const PersonInfo&other){
+PersonInfo::ienDistance(const PersonInfo&other) const{
   if (other.m_ienCode == m_ienCode) {
     return 0.0;
   } else {

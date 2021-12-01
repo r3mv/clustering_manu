@@ -18,13 +18,13 @@ public:
   {}
 
   double
-  flyweightDistance(const PersonInfo &other);
+  flyweightDistance(const PersonInfo &other) const;
 
   double
-  routingDistance(const PersonInfo &other);
+  routingDistance(const PersonInfo &other) const;
 
   double
-  ienDistance(const PersonInfo&other);
+  ienDistance(const PersonInfo&other) const;
 
 
 private:
