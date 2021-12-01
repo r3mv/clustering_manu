@@ -329,6 +329,11 @@ main(int argc,char **argv){
     std::cerr << "Exception raised:" << e.what();
     return EXIT_FAILURE;
   }
-  
-  
 }
+
+
+
+// Mettre dans le clustering des gens qui sont dans la même circonscription
+// code IEN
+// possibilité d'affecter qqun à un autre groupe
+// savoir combien il y a de personnes par groupe
