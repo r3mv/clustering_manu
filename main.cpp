@@ -174,7 +174,7 @@ distanceInMeters(double lat1_degree, double lon1_degree,
 }
 
 void
-computeDistances(const std::vector<PersonInfo>&persons,
+computeFlyweightDistances(const std::vector<PersonInfo>&persons,
 		 std::vector<std::vector<double>> &distances_meter) {
   distances_meter = std::vector<std::vector<double>>(persons.size(),
 						     std::vector<double>(persons.size(),std::numeric_limits<double>::max()));
@@ -186,6 +186,32 @@ computeDistances(const std::vector<PersonInfo>&persons,
     }
   }
 }
+
+void
+computeRoutingDistance(const std::vector<PersonInfo>&persons,
+		       std::vector<std::vector<double>>&distances){
+  distances = std::vector<std::vector<double>>(persons.size(),
+					       std::vector<double>(persons.size(), std::numeric_limits<double>::max()));
+  for (int i = 1;i < persons.size(); ++i) {
+    for (int j = 0; j < i; ++j) {
+      double d = persons.at(j).routingDistance(persons.at(i));
+      distances[i][j] = distances[j][i] = d;
+    }
+  }
+}
+
+void
+computeIenDistance(const std::vector<PersonInfo>&persons,
+		   std::vector<std::vector<double>>&distances){
+  distances = std::vector<std::vector<double>>(persons.size(),
+					       std::vector<double>(persons.size(), std::numeric_limits<double>::max()));
+  for (int i = 1;i < persons.size(); ++i) {
+    for (int j = 0; j < i; ++j) {
+      double d = persons.at(j).ienDistance(persons.at(i));
+      distances[i][j] = distances[j][i] = d;
+    }
+  }
+}					       
 		 
 
 struct Merge {
@@ -297,13 +323,10 @@ int
 main(int argc,char **argv){
 
   if (argc < 2) {
-    std::cout << "Usage: " << argv[0] << " <data_file>" << std::endl;
+    std::cout << "Usage: " << argv[0] << " <data_file.csv>" << std::endl;
     return EXIT_SUCCESS;
   }
   try {
-    // std::cout<< distanceInMeters(44.531082109, -0.341531541732,
-    // 				44.4230431057, -0.540077855567) << std::endl;
-
     const std::string dataFile = argv[1];
     const std::string jsonDataFile = std::regex_replace(dataFile, std::regex("\\.csv"), ".js");
     exportDataToJson(dataFile, jsonDataFile);
@@ -317,7 +340,7 @@ main(int argc,char **argv){
     int numElements = persons.size();
     
     std::vector<std::vector<double>> distances; // unoptimized n² distance matrix
-    computeDistances(persons, distances);
+    computeFlyweightDistances(persons, distances);
 
     std::vector<Merge> linkages;
     computeLinkage(distances, linkages);

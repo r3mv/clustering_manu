@@ -26,6 +26,8 @@ public:
   double
   ienDistance(const PersonInfo&other) const;
 
+  
+
 
 private:
 
