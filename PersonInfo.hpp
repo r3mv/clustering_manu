@@ -1,6 +1,7 @@
 #ifndef PERSON_INFO_HPP
 #define PERSON_INFO_HPP
 
+#include <iostream>
 #include <string>
 
 using std::string;
@@ -26,7 +27,11 @@ public:
   double
   ienDistance(const PersonInfo&other) const;
 
-  
+  /**
+   * Print PersonInfo as  GeoJSON
+   */
+  friend std::ostream&
+  operator<<(std::ostream& out, const PersonInfo& pi);
 
 
 private:

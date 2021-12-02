@@ -37,3 +37,22 @@ PersonInfo::ienDistance(const PersonInfo&other) const{
     return 1.0;
   }
 }
+
+std::ostream&
+operator<<(std::ostream &out, const PersonInfo& pi) {
+  out << "{ " << std::endl
+      << "\"type\": \"Feature\"," << std::endl
+      << "\"geometry\": {" << std::endl
+      << "    \"type\": \"Point\"," << std::endl
+      << "    \"coordinates\": [" << pi.m_longitude << "," << pi.m_latitude << "]" << std::endl
+      << "}," << std::endl
+      << "\"properties\": {" << std::endl
+      << "\"firstName\" : \"" << pi.m_firstName << "\"," << std::endl
+      << "\"lastName\" : \"" << pi.m_lastName << "\"," << std::endl
+      << "\"email\" : \"" << pi.m_email << "\"" << std::endl
+      << "\"ienCode\": \"" << pi.m_ienCode << "\"" << std::endl
+      << "}" << std::endl
+      << "}" << std::endl;
+  return out;
+}
+
