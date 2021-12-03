@@ -1,19 +1,18 @@
 /**
- * Distance btw cluster as minimal distance btw any
- * of the cluster members
- * clusters : array of array of elements
- * distances : array of distance objects
- * distance object [][]
- * }
+ * Return the index of the clusters to be merged,
+ * that is clusters having the minimal distance in the distance matrix
+ * distances: [][] matrix of distances between clusters
  */
-function minimalDistance(clusters, distances) {
+function findClustersToMerge(distances) {
     let min = Number.MAX_VALUE;
     let result = {
 	"from" : -1,
 	"into" : -1
     };
-    for (let into = 1;  into < clusters.length; ++into) {
-	for (let from = 0; from < into; ++from) {
+
+    // note: merge cluster with bigger index in cluster with smaller index
+    for (let from = 1;  from < distances.length; ++from) {
+	for (let into = 0; into < from; ++into) {
 	    if (distances[from][into] < min) {
 		min = distances[from][into];
 		result.from = from;
@@ -21,26 +20,30 @@ function minimalDistance(clusters, distances) {
 	    }
 	}
     }
+    result.distance = min;
     return result;
 }
 
-function mergeMinLink(clusters, distanceMatrix, merge) {
+function mergeMinLink(clusters, distances, merge) {
     for (var elem1 of clusters[merge.from]) {
 	for (var elem2 of clusters[merge.into]) {
-	    distanceMatrix[elem1][elem2] = Number.MAX_VALUE;
+	    distances[elem1][elem2] = Number.MAX_VALUE;
 	}
     }
-    clusters[merge.into].push(...clusters.merge.from);
-    clusters[merge.into].clear();
-    for (let cluster of clusters) {
-	if (cluster !== merge.into) {
+    clusters[merge.into].push(...clusters[merge.from]);
+    clusters[merge.from] = [];
+    for (let x = 0;x < clusters.length; ++x) {
+	if (x !== merge.into) {
+	    // dist btw cluster x and y is the min dist of any elements in cluster x and y
 	    let min = Number.MAX_VALUE;
-	    for (let elemX of cluster) {
+	    for (let elemX of clusters[x]) {
 		for (let elemInto of clusters[merge.into]) {
-		    min = min(distances[elemX][elemInto]);
+		    if (distances[elemX][elemInto] < min) {
+			min = distances[elemX][elemInto];
+		    }
 		}
 	    }
-	    for (let elemX of cluster) {
+	    for (let elemX of clusters[x]) {
 		for (let elemInto of clusters[merge.into]) {
 		    distances[elemX][elemInto] = distances[elemInto][elemX] = min;
 		}
@@ -52,19 +55,19 @@ function mergeMinLink(clusters, distanceMatrix, merge) {
 
 /**
  * Perform the agglomerative clustering
- * clusters : array of array of elements, initialy one element per cluster
- * distances : array of distance objects
- * linkageFunc: function returning the index of the clusters to be merged
+ * clusters : [][] array of array of elements, initialy one element per cluster
+ * distances : [][] array of distance objects (N² could be N*(N-1) if optim needed
  * mergeFunc: function actually performing the merge of clusters, updating distance matrix if needed
  *
  */
-function agglomerativeHierarchicalClustering(clusters, distances, linkageFunc, mergeFunc) {
+function agglomerativeHierarchicalClustering(clusters, distances, mergeFunc) {
     let linkage = [];
     let numElem = clusters.length;
     while (linkage.length !== numElem - 1) {
-	let merge = linkageFunction(clusters, distances);
-	linkage.pushBack(merge);
+	let merge = findClustersToMerge(distances);
+	linkage.push(merge);
 	mergeFunc(clusters, distances, merge);
+	console.log("Merge " + merge.from + " into " + merge.into + " with dist:" + merge.distance);
     }
 }
 
@@ -81,7 +84,6 @@ function callClustering(min, max, w1, w2, w3)  {
     }
     agglomerativeHierarchicalClustering(clusters,
 					flyweightDistances.distances,
-					minimalDistance,
 					mergeMinLink);
-  
+    
 }
