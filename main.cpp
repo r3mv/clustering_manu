@@ -94,84 +94,25 @@ exportDataToJson(const std::string &infilename, const std::string &outfilename) 
 
 
 void
-exportDataToGeoJson(const std::string &infilename, const std::string &outfilename) {
-  std::ifstream infile(infilename);
+exportToGeoJSON(const std::string &outfilename, const std::vector<PersonInfo> &persons) {
   std::ofstream outfile(outfilename);
   outfile << "var geoData = {" << std::endl
 	  << "\"type\": \"FeatureCollection\"," << std::endl
 	  << "\"features\": [" << std::endl;
-  
-  int cpt = 0;
   bool first = true;
   std::string buffer;
-  while (std::getline(infile, buffer)) {
+  for (const PersonInfo&p : persons) {
     if (first) {
       first = false;
     } else {
       outfile << "," << std::endl;
     }
-    std::stringstream ss(buffer);
-    std::vector<std::string> split;
-    std::string val;
-    while (std::getline(ss, val, SEPARATOR)) {
-      split.push_back(val);
-    }
-    std::string &firstName = split.at(FIRST_NAME_COLUMN_INDEX);
-    std::string &lastName = split.at(LAST_NAME_COLUMN_INDEX);
-    std::string &email = split.at(EMAIL_COLUMN_INDEX);
-    std::string &lat_str = split.at(LATITUDE_COLUMN_INDEX);
-    std::replace(lat_str.begin(), lat_str.end(), ',','.');
-    std::string &lon_str = split.at(LONGITUDE_COLUMN_INDEX);
-    std::replace(lon_str.begin(), lon_str.end(), ',','.');
-    double lat_degree = std::stod(lat_str);
-    double lon_degree = std::stod(lon_str);
-    outfile << "{ " << std::endl
-	    << "\"type\": \"Feature\"," << std::endl
-	    << "\"id\": " << cpt++  << "," << std::endl
-	    << "\"geometry\": {" << std::endl
-	    << "    \"type\": \"Point\"," << std::endl
-	    << "    \"coordinates\": [" << lon_degree << "," << lat_degree << "]" << std::endl
-	    << "}," << std::endl
-	    << "\"properties\": {" << std::endl
-	    << "\"firstName\" : \"" << firstName << "\"," << std::endl
-	    << "\"lastName\" : \"" << lastName << "\"," << std::endl
-	    << "\"email\" : \"" << email << "\"" << std::endl
-	    << "}" << std::endl
-      	    << "}" << std::endl;
+    outfile << p;
   }
-  infile.close();
   outfile << "]};";
   outfile.close();
-  
 }
 
-double degToRad(double val_degree) {
-  return val_degree * M_PI / 180;
-}
-
-/**
- * lat and lon
- * are signed decimal degrees without compass direction
- * where negative indicates west/south (e.g. 40.7486, -73.9864)
- * @return distance in meters
- * @see http://www.movable-type.co.uk/scripts/latlong.html
- */
-
-double
-distanceInMeters(double lat1_degree, double lon1_degree,
-		 double lat2_degree, double lon2_degree) {
-  double earth_radius_meters = 6371e3;
-  double lat1_radian = degToRad(lat1_degree);
-  double lat2_radian = degToRad(lat2_degree);
-  double delta_lat_radian = degToRad(lat2_degree-lat1_degree);
-  double delta_lon_radian = degToRad(lon2_degree-lon1_degree);
-
-  double a = sin(delta_lat_radian/2)*sin(delta_lat_radian/2)+
-    cos(lat1_radian)*cos(lat2_radian)*
-    sin(delta_lon_radian/2)*sin(delta_lon_radian/2);
-  double c = 2*atan2(sqrt(a), sqrt(1-a));
-  return earth_radius_meters * c; // in metres
-}
 
 void
 computeFlyweightDistances(const std::vector<PersonInfo>&persons,
@@ -212,7 +153,34 @@ computeIenDistance(const std::vector<PersonInfo>&persons,
     }
   }
 }					       
-		 
+
+void
+exportDistanceMatrix(const std::vector<std::vector<double>> &distances,
+		     const std::string &outfileName,
+		     const std::string &distanceName) {
+  std::ofstream outfile(outfileName);
+  outfile << "var " << distanceName << "= {" << std::endl
+	  << "\"numElem\":" << distances.size() << std::endl
+	  << "\"distances\":[";
+ 
+  for (int i = 0;i < distances.size();++i) {
+    if (i == 0) {
+      outfile << "[";
+    } else {
+      outfile << ",[";
+    }
+    for(int j = 0;j < distances.size(); ++j) {
+      if (j > 0) {
+	outfile << ",";
+      }
+      outfile << distances[i][j];
+    }
+    outfile << "]";
+  }
+  outfile << "};";
+  outfile.close();
+}
+
 
 struct Merge {
   int index1;
@@ -256,6 +224,7 @@ findMin(const std::vector<std::vector<double>> &distances,
   return min;
 }
 
+
 void
 updateDistanceMatrix(std::vector<std::vector<double>> &distances,
 		     const Merge &m,
@@ -294,7 +263,6 @@ updateDistanceMatrix(std::vector<std::vector<double>> &distances,
   }
 }
 
-
 /**
  * Agglomerative hierachical clustering based on distances
  * with single linkage
@@ -328,20 +296,23 @@ main(int argc,char **argv){
   }
   try {
     const std::string dataFile = argv[1];
-    const std::string jsonDataFile = std::regex_replace(dataFile, std::regex("\\.csv"), ".js");
-    exportDataToJson(dataFile, jsonDataFile);
-
-    const std::string jsonGeoData = "geodata.js";
-    exportDataToGeoJson(dataFile, jsonGeoData);
-
-
     std::vector<PersonInfo> persons;
     importData(dataFile, persons);
     int numElements = persons.size();
     
+    // const std::string jsonDataFile = std::regex_replace(dataFile, std::regex("\\.csv"), ".js");
+    // exportDataToJson(dataFile, jsonDataFile);
+
+    const std::string jsonGeoData = "geodata.js";
+    exportToGeoJSON(jsonGeoData, persons);
+
+        
     std::vector<std::vector<double>> distances; // unoptimized n² distance matrix
     computeFlyweightDistances(persons, distances);
 
+    exportDistanceMatrix(distances, "flyweight.js", "flyweight");
+    
+    
     std::vector<Merge> linkages;
     computeLinkage(distances, linkages);
     int cpt = 0;
