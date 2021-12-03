@@ -117,3 +117,53 @@ function callClustering(min, max, w1, w2, w3)  {
 	alert("Clustering deja calculé");
     }
 }
+
+function replayLinkage(numClusters) {
+    let clusters = [];
+    for (let i = 0;i < flyweightDistances.numElem; ++i) {
+	clusters.push([i]);
+    }
+    let upTo = linkage.length - numClusters + 1;
+    for (let i = 0;i < upTo; ++i) {
+	let merge = linkage[i];
+	console.log("Replay merge " + i + ": " + merge.from + " into " + merge.into + " with dist " + merge.distance);
+	clusters[merge.into].push(...clusters[merge.from]);
+	clusters[merge.from] = [];
+    }
+    return clusters;
+}
+
+function updateAnalysis(overMax, underMin, clusters) {
+    let analysis = "";
+    for (let c of overMax) {
+	analysis += "<li> Cluster " + c + " has " + clusters[c].length + " elements (more than max)</li>"
+    }
+    for (let c of underMin) {
+	if (clusters[c].length > 0) {
+	analysis += "<li> Cluster " + c + " has " + clusters[c].length + " elements (less than min)</li>"
+	}
+    }
+    
+    $('#analysisResults').html(analysis);
+}
+
+function analyseClustering(min, max, numberOfClusters) {
+    if (typeof linkage === 'undefined') {
+	$('#analysisResults').html("Clustering not computed yet");
+    } else {
+	let numMerge = linkage.length;
+	let clusters = replayLinkage(numberOfClusters);
+
+	let overMax = [];
+	let underMin = [];
+	for(let i = 0;i <clusters.length;++i) {
+	    if (clusters[i].length > max) {
+		overMax.push(i); 
+	    }
+	    if (clusters[i].length < min) {
+		underMin.push(i);
+	    }
+	}
+	updateAnalysis(overMax, underMin, clusters);
+    }
+}

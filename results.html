@@ -16,15 +16,8 @@
     <h1>Clustering pour manu</h1>
     <div id="map" style="width: 640px;height: 480px;"></div>
     <div>
+      <h2>Paramètres du clustering</h2>
       <form id="clusteringParameters" onsubmit="return false;">
-	<div>
-	  <label> Nombre de personnes minimal par groupe:</label>
-	  <input type="number" id="input_num_min" name="input_num_min" min="0" max="50" value="20" required/>
-	</div>
-	<div>	
-	  <label> Nombre de personnes maximal par groupe:</label>
-	  <input type="number" id="input_num_max" name="input_num_max" min="0" max="50" value="30" required/>
-	</div>
 	<div>
 	  <label> Poids de la distance routière dans le calcul de distance: </label>
 	  <input type="number" id="weight_routing_distance" name="weight_routing_distance" min="0.0" max="1.0" step="0.01" value="0.33"/>
@@ -42,8 +35,29 @@
 	</div>
       </form>
     </div>
-
     <div>
+      <h2>Paramètres de l'analyse</h2>
+      <form id="clusteringAnalysisParameters" onchange="analyseClustering(input_num_min.valueAsNumber,input_num_max.valueAsNumber, nb_clusters.valueAsNumber)">
+	<div>
+	  <label> Nombre de personnes minimal par groupe:</label>
+	  <input type="number" id="input_num_min" name="input_num_min" min="0" max="50" value="20" required/>
+	</div>
+	<div>	
+	  <label> Nombre de personnes maximal par groupe:</label>
+	  <input type="number" id="input_num_max" name="input_num_max" min="0" max="50" value="30" required/>
+	</div>
+	<div>
+	  <label> Nombre de clusters:</label>
+	  <input type="number" id="nb_clusters" name="nb_clusters" min="1" max="flyweightDistances.numElem" required/>
+	</div>
+      </form>
+      <hr>
+      <div id="analysisResults">Clustering not computed yet</div>
+      <hr>
+    </div>
+    
+    <div>
+      <h2>Données</h2>
       <table class="table table-hover">
 	<thead>
 	  <tr>
@@ -58,9 +72,7 @@
       </table>
       <div>
 	<script>
-	  
 	  var map = L.map('map').setView([44.85, -0.54], 9);
-	  
 	  var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
 	      maxZoom: 18,
 	      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
@@ -69,7 +81,6 @@
 	      tileSize: 512,
 	      zoomOffset: -1
 	  }).addTo(map);
-
 	  var index = 0;
 	  var tableContent = "";
 	  
@@ -97,7 +108,7 @@
 				     onEachFeature: onEachFeature
 				 }
 				).addTo(map);
-	  </script>
+				</script>
 
   </body>
 </html>
