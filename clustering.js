@@ -1,3 +1,5 @@
+var linkage = undefined;
+
 /**
  * Return the index of the clusters to be merged,
  * that is clusters having the minimal distance in the distance matrix
@@ -69,6 +71,7 @@ function agglomerativeHierarchicalClustering(clusters, distances, mergeFunc) {
 	mergeFunc(clusters, distances, merge);
 	console.log("Merge " + merge.from + " into " + merge.into + " with dist:" + merge.distance);
     }
+    return linkage;
 }
 
 
@@ -78,12 +81,27 @@ function callClustering(min, max, w1, w2, w3)  {
 		+ " w1=" + w1
 		+ " w2=" + w2
 		+ " w3=" + w3);
-    var clusters = [];
-    for (let i = 0;i < flyweightDistances.numElem; ++i) {
-	clusters.push([i]);
-    }
-    agglomerativeHierarchicalClustering(clusters,
-					flyweightDistances.distances,
-					mergeMinLink);
+
+    $('#clusteringParameters')
+	.ajaxForm({
+	    url : '#',
+	    dataType : 'json',
+	    success : function(response) {
+		window.linkage = response;
+	    }
+	});
+
+    
+    // var clusters = [];
+    // for (let i = 0;i < flyweightDistances.numElem; ++i) {
+    // 	clusters.push([i]);
+    // }
+    // if (typeof window.linkage === 'undefined') {
+    // 	window.linkage = agglomerativeHierarchicalClustering(clusters,
+    // 						      flyweightDistances.distances,
+    // 						      mergeMinLink);
+    // } else {
+    // 	console.alert("Linkage deja calculé");
+    // }
     
 }
