@@ -27,9 +27,11 @@ function findClustersToMerge(distances) {
 }
 
 function mergeMinLink(clusters, distances, merge) {
-    for (var elem1 of clusters[merge.from]) {
-	for (var elem2 of clusters[merge.into]) {
-	    distances[elem1][elem2] = Number.MAX_VALUE;
+    for (let i = 0;i < clusters[merge.from].length;++i) {
+	for (let j = 0; j < clusters[merge.into].length; ++j) {
+	    let elem1 = clusters[merge.from][i];
+	    let elem2 = clusters[merge.into][j];
+	    distances[elem1][elem2] = distances[elem2][elem1] = Number.MAX_VALUE;
 	}
     }
     clusters[merge.into].push(...clusters[merge.from]);
@@ -38,22 +40,40 @@ function mergeMinLink(clusters, distances, merge) {
 	if (x !== merge.into) {
 	    // dist btw cluster x and y is the min dist of any elements in cluster x and y
 	    let min = Number.MAX_VALUE;
-	    for (let elemX of clusters[x]) {
-		for (let elemInto of clusters[merge.into]) {
-		    if (distances[elemX][elemInto] < min) {
-			min = distances[elemX][elemInto];
+	    for (let i = 0;i < clusters[x].length; ++i) {
+		let outerElem = clusters[x][i];
+		for (let j = 0;j < clusters[merge.into].length; ++j) {
+		    let innerElem = clusters[merge.into][j];
+		    if (distances[outerElem][innerElem] < min) {
+			min = distances[outerElem][innerElem];
 		    }
 		}
 	    }
-	    for (let elemX of clusters[x]) {
-		for (let elemInto of clusters[merge.into]) {
-		    distances[elemX][elemInto] = distances[elemInto][elemX] = min;
+	    for (let i = 0;i < clusters[x].length; ++i) {
+		for (let j = 0; j < clusters[merge.into].length; ++j) {
+		    let outerElem = clusters[x][i];
+		    let innerElem = clusters[merge.into][j];
+		    distances[outerElem][innerElem] = distances[innerElem][outerElem] = min;
 		}
 	    }
 	}
     }
 }
 
+
+function keepMerging(clusters) {
+    let res = 0;
+    for (let c of clusters) {
+	if (c.length > 0) {
+	    res++;
+	}
+    }
+    if (res > 1) {
+	return true;
+    } else {
+	return false;
+    }
+}
 
 /**
  * Perform the agglomerative clustering
@@ -65,7 +85,10 @@ function mergeMinLink(clusters, distances, merge) {
 function agglomerativeHierarchicalClustering(clusters, distances, mergeFunc) {
     let linkage = [];
     let numElem = clusters.length;
-    while (linkage.length !== numElem - 1) {
+    let numLeft = clusters.length;
+    while (keepMerging(clusters)) {
+	//while(linkage.length < numElem-1) {
+	//console.log(numLeft + " clusters left");
 	let merge = findClustersToMerge(distances);
 	linkage.push(merge);
 	mergeFunc(clusters, distances, merge);
