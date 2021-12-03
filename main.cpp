@@ -160,7 +160,7 @@ exportDistanceMatrix(const std::vector<std::vector<double>> &distances,
 		     const std::string &distanceName) {
   std::ofstream outfile(outfileName);
   outfile << "var " << distanceName << "= {" << std::endl
-	  << "\"numElem\":" << distances.size() << std::endl
+	  << "\"numElem\":" << distances.size() << "," << std::endl
 	  << "\"distances\":[";
  
   for (int i = 0;i < distances.size();++i) {
@@ -177,7 +177,7 @@ exportDistanceMatrix(const std::vector<std::vector<double>> &distances,
     }
     outfile << "]";
   }
-  outfile << "};";
+  outfile << "]};";
   outfile.close();
 }
 
@@ -310,7 +310,7 @@ main(int argc,char **argv){
     std::vector<std::vector<double>> distances; // unoptimized n² distance matrix
     computeFlyweightDistances(persons, distances);
 
-    exportDistanceMatrix(distances, "flyweight.js", "flyweight");
+    exportDistanceMatrix(distances, "flyweight.js", "flyweightDistances");
     
     
     std::vector<Merge> linkages;
