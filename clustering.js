@@ -147,6 +147,45 @@ function updateAnalysis(overMax, underMin, clusters) {
     $('#analysisResults').html(analysis);
 }
 
+function updateMap(clusters) {
+
+    if (typeof window.centroidlines === 'undefined') {
+	window.centroidlines = [];
+    } else {
+	for (layer of window.centroidlines) {
+	    map.removeLayer(layer);
+	}
+    }
+    for (let c of clusters) {
+	if (c.length > 0) {
+	    let lat = 0;
+	    let lon = 0;
+	    for (let i = 0; i < c.length; ++i) {
+		lat += geoData.features[c[i]].geometry.coordinates[1];
+		lon += geoData.features[c[i]].geometry.coordinates[0];
+	    }
+	    lat /= c.length;
+	    lon /= c.length;
+
+	    for (let i = 0; i < c.length; ++i) {
+		let line = {
+		    "type": "Feature",
+		    "geometry": {
+			"type" : "LineString",
+			"coordinates": [
+			    [lon, lat],
+			    [geoData.features[c[i]].geometry.coordinates[0],
+			     geoData.features[c[i]].geometry.coordinates[1]]
+			]
+		    },
+		}
+		window.centroidlines.push(L.geoJSON(line).addTo(map));
+	    }
+	}
+    }
+
+}
+
 function analyseClustering(min, max, numberOfClusters) {
     if (typeof linkage === 'undefined') {
 	$('#analysisResults').html("Clustering not computed yet");
@@ -165,5 +204,6 @@ function analyseClustering(min, max, numberOfClusters) {
 	    }
 	}
 	updateAnalysis(overMax, underMin, clusters);
+	updateMap(clusters);
     }
 }
