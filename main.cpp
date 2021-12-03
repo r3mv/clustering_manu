@@ -199,7 +199,7 @@ struct Merge {
   ~Merge(){}
 
   friend std::ostream& operator<<(std::ostream &out, const Merge& m) {
-    out << m.index1 << " " << m.index2 << ":" << m.distance;
+    out << m.index2 << " into " << m.index1 << " with dist:" << m.distance;
     return out;
   }
 };
@@ -263,6 +263,17 @@ updateDistanceMatrix(std::vector<std::vector<double>> &distances,
   }
 }
 
+
+bool
+keepMerging(const std::vector<std::deque<int>> &clusters) {
+  int numNonEmpty = 0;
+  for(const std::deque<int> &clusterComposition: clusters) {
+    if (!clusterComposition.empty()){
+      numNonEmpty++;
+    }
+  }
+  return numNonEmpty > 1;
+}
 /**
  * Agglomerative hierachical clustering based on distances
  * with single linkage
@@ -279,7 +290,7 @@ computeLinkage(std::vector<std::vector<double>>& distances,
   for (int i = 0;i < numElem; ++i) {
     clusters[i].push_back(i);
   }
-  while(linkages.size() != numElem-1) {
+  while(keepMerging(clusters)) {
     double minDist = findMin(distances, i1,i2);
     Merge m(i1, i2, minDist);
     updateDistanceMatrix(distances, m, clusters);
@@ -317,7 +328,7 @@ main(int argc,char **argv){
     computeLinkage(distances, linkages);
     int cpt = 0;
     for (Merge &m : linkages) {
-      std::cout << "Merge " << ++cpt << "=" << m << std::endl;
+      std::cout << "Merge " << m << std::endl;
     }
     return EXIT_SUCCESS;
   }
