@@ -81,27 +81,16 @@ function callClustering(min, max, w1, w2, w3)  {
 		+ " w1=" + w1
 		+ " w2=" + w2
 		+ " w3=" + w3);
-
-    $('#clusteringParameters')
-	.ajaxForm({
-	    url : '#',
-	    dataType : 'json',
-	    success : function(response) {
-		window.linkage = response;
-	    }
-	});
-
     
-    // var clusters = [];
-    // for (let i = 0;i < flyweightDistances.numElem; ++i) {
-    // 	clusters.push([i]);
-    // }
-    // if (typeof window.linkage === 'undefined') {
-    // 	window.linkage = agglomerativeHierarchicalClustering(clusters,
-    // 						      flyweightDistances.distances,
-    // 						      mergeMinLink);
-    // } else {
-    // 	console.alert("Linkage deja calculé");
-    // }
-    
+    var clusters = [];
+    for (let i = 0;i < flyweightDistances.numElem; ++i) {
+	clusters.push([i]);
+    }
+    if (typeof linkage === 'undefined') {
+	window.linkage = agglomerativeHierarchicalClustering(clusters,
+							     flyweightDistances.distances,
+							     mergeMinLink);
+    } else {
+	alert("Clustering deja calculé");
+    }
 }
