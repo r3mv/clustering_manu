@@ -118,6 +118,38 @@ function callClustering(min, max, w1, w2, w3)  {
     }
 }
 
+function pointToLayer (feature, latlng) {
+    let fillColor = typeof feature.properties.clusterIndex === 'undefined' ? '#000' : cluster_colors[feature.properties.clusterIndex%cluster_colors.length]; 
+    return L.circleMarker(latlng, {
+	radius: 4,
+	fillColor: fillColor,
+	color: '#000',
+	weight: 1,
+	opacity: 1,
+	fillOpacity: 0.8
+    });
+}
+
+function onEachFeature(feature, layer) {
+    var popupContent = "";
+    if (feature.properties && feature.properties.firstName) {
+	popupContent += "<p> #"
+	    + (index)
+	    + " "
+	    + feature.properties.firstName
+	    + " "
+	    + feature.properties.lastName
+	    + "</p>";
+    }
+    if (feature.properties && feature.properties.email) {
+	popupContent += "<p>" + feature.properties.email + "</p>";
+    }
+    // console.log(popupContent);
+    layer.bindPopup(popupContent);
+    tableContent += "<tr><td>"+ (index++) + "</td><td>"+feature.properties.firstName+"</td><td>"+feature.properties.lastName+"</td><td>"+feature.properties.email+"</td></tr>";
+}
+
+
 function replayLinkage(numClusters) {
     let clusters = [];
     for (let i = 0;i < flyweightDistances.numElem; ++i) {
@@ -156,6 +188,9 @@ function updateMap(clusters) {
 	    map.removeLayer(layer);
 	}
     }
+    map.removeLayer(layers);
+    
+    let cluster_count = 0;
     for (let c of clusters) {
 	if (c.length > 0) {
 	    let lat = 0;
@@ -166,7 +201,7 @@ function updateMap(clusters) {
 	    }
 	    lat /= c.length;
 	    lon /= c.length;
-
+	    
 	    for (let i = 0; i < c.length; ++i) {
 		let line = {
 		    "type": "Feature",
@@ -180,9 +215,15 @@ function updateMap(clusters) {
 		    },
 		}
 		window.centroidlines.push(L.geoJSON(line).addTo(map));
+		geoData.features[c[i]].properties.clusterIndex = cluster_count;
 	    }
+	    cluster_count++;
 	}
     }
+
+    window.layers = L.geoJSON(geoData, {
+	pointToLayer: pointToLayer,
+	onEachFeature: onEachFeature}).addTo(map);
 
 }
 
