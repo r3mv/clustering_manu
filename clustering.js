@@ -236,8 +236,17 @@ function updateMap(clusters) {
 	onEachFeature: onEachFeature}).addTo(map);
 }
 
+function manualChange(elementId, clusterId) {
+    console.log("Manualchange : elem " + elementId + " -> cluster " + clusterId);
+   // geoData.features[elementId-1].properties.clusterIndex = clusterId;
+    // todo: modifier pour que replayLinkage modifie le clusterId directement et non les autres 
+    // updateMap(pasClusters);
+    // updateTable(pasClusters);
+    
+}
+
 function updateTable(clusters) {
-    $("table tr:first").after("");
+    $("#tablebody").empty();
     let cpt = 1;
     let tableContent = "";
      for (let c of clusters) {
@@ -247,16 +256,17 @@ function updateTable(clusters) {
 		 let clusterIndex = feature.properties.clusterIndex;
 		 tableContent +=
 		     "<tr>"
-		     + "<td>" + (cpt++)                      + "</td>"
+		     + "<td>" + cpt                          + "</td>"
 		     + "<td>" + feature.properties.firstName + "</td>"
 		     + "<td>" + feature.properties.lastName  + "</td>" 
 		     + "<td>" + feature.properties.email     + "</td>"
-		     + "<td>" + clusterIndex                 + "</td>"
+		     + "<td><input id='cluster_input_elem_" + cpt + "' type='number' onchange=manualChange(" + cpt + ",cluster_input_elem_" + cpt + ".valueAsNumber)"+   " value='" + clusterIndex +"'/></td>"
 		     + "</tr>";
+		 cpt++;
 	     }
 	}
      }
-    $("table tr:first").after(tableContent);
+    $("#datatable").html(tableContent);
     
 }
 
