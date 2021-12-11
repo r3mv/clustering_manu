@@ -144,6 +144,9 @@ function onEachFeature(feature, layer) {
     if (feature.properties && feature.properties.email) {
 	popupContent += "<p>" + feature.properties.email + "</p>";
     }
+    if (feature.properties.clusterIndex) {
+	popupContent += "<p>Cluster: " + feature.properties.clusterIndex + "</p>";
+    }
     // console.log(popupContent);
     layer.bindPopup(popupContent);
     tableContent += "<tr><td>"+ (index++) + "</td><td>"+feature.properties.firstName+"</td><td>"+feature.properties.lastName+"</td><td>"+feature.properties.email+"</td></tr>";
@@ -221,6 +224,7 @@ function updateMap(clusters) {
 	}
     }
 
+    window.index = 0;
     window.layers = L.geoJSON(geoData, {
 	pointToLayer: pointToLayer,
 	onEachFeature: onEachFeature}).addTo(map);
