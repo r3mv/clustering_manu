@@ -67,6 +67,7 @@
 	    <th scope="col">Prénom</th>
 	    <th scope="col">Nom</th>
 	    <th scope="col">email</th>
+	    <th scope="col">cluster #</th>
 	  </tr>
 	</thead>
 	<tbody>
@@ -84,14 +85,14 @@
 	      zoomOffset: -1
 	  }).addTo(map);
 	  var index = 0;
-	  var tableContent = "";
 	  var layers = L.geoJSON(geoData,
 				 {
 				     pointToLayer: pointToLayer,
 				     onEachFeature: onEachFeature
 				 }
 				).addTo(map);
-				</script>
+	  
+	</script>
 
   </body>
 </html>

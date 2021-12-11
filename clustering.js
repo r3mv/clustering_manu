@@ -113,6 +113,9 @@ function callClustering(min, max, w1, w2, w3)  {
 	window.linkage = agglomerativeHierarchicalClustering(clusters,
 							     flyweightDistances.distances,
 							     mergeMinLink);
+	analyseClustering( $("#input_num_min.valueAsNumber"),
+			   $("#input_num_max.valueAsNumber"),
+			   Math.round(flyweightDistances.numElem/2));
     } else {
 	alert("Clustering deja calculé");
     }
@@ -144,13 +147,14 @@ function onEachFeature(feature, layer) {
     if (feature.properties && feature.properties.email) {
 	popupContent += "<p>" + feature.properties.email + "</p>";
     }
-    if (feature.properties.clusterIndex) {
+    if (feature.properties.clusterIndex >= 0) {
 	popupContent += "<p>Cluster: " + feature.properties.clusterIndex + "</p>";
     }
     // console.log(popupContent);
     layer.bindPopup(popupContent);
-    tableContent += "<tr><td>"+ (index++) + "</td><td>"+feature.properties.firstName+"</td><td>"+feature.properties.lastName+"</td><td>"+feature.properties.email+"</td></tr>";
+   
 }
+
 
 
 function replayLinkage(numClusters) {
@@ -228,7 +232,30 @@ function updateMap(clusters) {
     window.layers = L.geoJSON(geoData, {
 	pointToLayer: pointToLayer,
 	onEachFeature: onEachFeature}).addTo(map);
+}
 
+function updateTable(clusters) {
+    $("table tr:first").after("");
+    let cpt = 1;
+    let tableContent = "";
+     for (let c of clusters) {
+	 if (c.length > 0) {
+	     for(let i = 0;i < c.length; ++i) {
+		 let feature = geoData.features[c[i]];
+		 let clusterIndex = feature.properties.clusterIndex;
+		 tableContent +=
+		     "<tr>"
+		     + "<td>" + (cpt++)                      + "</td>"
+		     + "<td>" + feature.properties.firstName + "</td>"
+		     + "<td>" + feature.properties.lastName  + "</td>" 
+		     + "<td>" + feature.properties.email     + "</td>"
+		     + "<td>" + clusterIndex                 + "</td>"
+		     + "</tr>";
+	     }
+	}
+     }
+    $("table tr:first").after(tableContent);
+    
 }
 
 function analyseClustering(min, max, numberOfClusters) {
@@ -250,5 +277,6 @@ function analyseClustering(min, max, numberOfClusters) {
 	}
 	updateAnalysis(overMax, underMin, clusters);
 	updateMap(clusters);
+	updateTable(clusters);
     }
 }
