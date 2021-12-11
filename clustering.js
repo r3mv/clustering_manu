@@ -221,7 +221,9 @@ function updateMap(clusters) {
 			]
 		    },
 		}
-		window.centroidlines.push(L.geoJSON(line).addTo(map));
+
+		let fillColor = cluster_colors[cluster_count%cluster_colors.length]; 
+		window.centroidlines.push(L.geoJSON(line, {color:fillColor}).addTo(map));
 		geoData.features[c[i]].properties.clusterIndex = cluster_count;
 	    }
 	    cluster_count++;
