@@ -172,6 +172,16 @@ function replayLinkage(numClusters) {
 	clusters[merge.into].push(...clusters[merge.from]);
 	clusters[merge.from] = [];
     }
+    
+    let cluster_count = 0;
+    for (let c of clusters) {
+	if (c.length > 0) {
+	    for (let i = 0; i < c.length; ++i) {
+		geoData.features[c[i]].properties.clusterIndex = cluster_count;
+	    }
+	    cluster_count++;
+	}
+    }
     return clusters;
 }
 
@@ -199,8 +209,6 @@ function updateMap(clusters) {
 	}
     }
     map.removeLayer(layers);
-    
-    let cluster_count = 0;
     for (let c of clusters) {
 	if (c.length > 0) {
 	    let lat = 0;
@@ -224,12 +232,10 @@ function updateMap(clusters) {
 			]
 		    },
 		}
-
-		let fillColor = cluster_colors[cluster_count%cluster_colors.length]; 
+		let clusterIndex = geoData.features[c[i]].properties.clusterIndex;
+		let fillColor = cluster_colors[clusterIndex%cluster_colors.length]; 
 		window.centroidlines.push(L.geoJSON(line, {color:fillColor}).addTo(map));
-		geoData.features[c[i]].properties.clusterIndex = cluster_count;
 	    }
-	    cluster_count++;
 	}
     }
 
@@ -241,10 +247,10 @@ function updateMap(clusters) {
 
 function manualChange(elementId, clusterId) {
     console.log("Manualchange : elem " + elementId + " -> cluster " + clusterId);
-   // geoData.features[elementId-1].properties.clusterIndex = clusterId;
+    geoData.features[elementId-1].properties.clusterIndex = clusterId;
     // todo: modifier pour que replayLinkage modifie le clusterId directement et non les autres 
-    // updateMap(pasClusters);
-    // updateTable(pasClusters);
+    updateMap(window.clusters);
+    updateTable(window.clusters);
     
 }
 
@@ -278,7 +284,7 @@ function analyseClustering(min, max, numberOfClusters) {
 	$('#analysisResults').html("Clustering not computed yet");
     } else {
 	let numMerge = linkage.length;
-	let clusters = replayLinkage(numberOfClusters);
+	window.clusters = replayLinkage(numberOfClusters);
 
 	let overMax = [];
 	let underMin = [];
