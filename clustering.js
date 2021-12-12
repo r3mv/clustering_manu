@@ -14,6 +14,8 @@ function allowMergeWithClusterCardinality(clusterFrom, clusterTo, clusters, max)
  * distances: [][] matrix of distances between clusters
  */
 function findClustersToMerge(distances, clusters) {
+    let mySet = new Set();
+    
     let result = {
 	"from" : -1,
 	"into" : -1,
@@ -34,14 +36,20 @@ function findClustersToMerge(distances, clusters) {
 	    }
 	}
 	if (!allowMoreThanMax) {
+	    // methode stupide. Faire en sorte dans mergeMinLink que tout merge impossible pour question de cardinality soit noté avec une distance infinie.
 	    mergeAllowed = allowMergeWithClusterCardinality(result.from, result.into, clusters, $('#input_num_max').val());
 	    if (!mergeAllowed) {
-		console.log("Abort merge " + result.from + " with " + result.into + ": cluster size exceed max");
-		distances[result.from][result.into] = distances[result.into][result.from] = Number.MAX_VALUE;
+	//	console.log("Abort merge " + result.from + " with " + result.into + ": cluster size exceed max");
+		let obj = [result.from, result.into];
+		if (mySet.has(obj)) {
+		    break;
+		} else {
+		    mySet.add(obj);
+		}
 		// reset search for result.
+		distances[result.from][result.into] = distances[result.into][result.from] = Number.MAX_VALUE;
 		result.from = result.into = -1;
 		result.distance = Number.MAX_VALUE;
-		// todo: get out if no  more merge is allowed due to cardinality constraints. Keep track of results tried
 	    }
 	} else {
 	    mergeAllowed = true;
@@ -85,7 +93,12 @@ function mergeMinLink(clusters, distances, merge) {
 }
 
 
-function keepMerging(clusters) {
+function keepMerging(clusters, lastMerge) {
+    if (lastMerge !== null) {
+	if (lastMerge.from === -1 || lastMerge.into === -1) {
+	    return false;
+	}
+    }
     let res = 0;
     for (let c of clusters) {
 	if (c.length > 0) {
@@ -110,10 +123,11 @@ function agglomerativeHierarchicalClustering(clusters, distances, mergeFunc) {
     let linkage = [];
     let numElem = clusters.length;
     let numLeft = clusters.length;
-    while (keepMerging(clusters)) {
+    let merge = null;
+    while (keepMerging(clusters, merge)) {
 	//while(linkage.length < numElem-1) {
 	//console.log(numLeft + " clusters left");
-	let merge = findClustersToMerge(distances, clusters);
+	merge = findClustersToMerge(distances, clusters);
 	linkage.push(merge);
 	mergeFunc(clusters, distances, merge);
 	console.log("Merge " + merge.from + " into " + merge.into + " with dist:" + merge.distance);
