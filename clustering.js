@@ -1,28 +1,52 @@
 var linkage = undefined;
 
+
+function allowMergeWithClusterCardinality(clusterFrom, clusterTo, clusters, max) {
+    let fromSize = clusters[clusterFrom].length;
+    let intoSize = clusters[clusterTo].length;
+    let val = fromSize + intoSize;
+    return fromSize > 0 && intoSize > 0 && val <= max;
+}
+
 /**
  * Return the index of the clusters to be merged,
  * that is clusters having the minimal distance in the distance matrix
  * distances: [][] matrix of distances between clusters
  */
-function findClustersToMerge(distances) {
-    let min = Number.MAX_VALUE;
+function findClustersToMerge(distances, clusters) {
     let result = {
 	"from" : -1,
-	"into" : -1
+	"into" : -1,
+	"distance": Number.MAX_VALUE
     };
-
-    // note: merge cluster with bigger index in cluster with smaller index
-    for (let from = 1;  from < distances.length; ++from) {
-	for (let into = 0; into < from; ++into) {
-	    if (distances[from][into] < min) {
-		min = distances[from][into];
-		result.from = from;
-		result.into = into;
+    let allowMoreThanMax = $('#input_allow_more_than_max').is(":checked");
+    let mergeAllowed = false;
+    while (!mergeAllowed) {
+	// note: merge cluster with bigger index in cluster with smaller index
+	for (let from = 1;  from < distances.length; ++from) {
+	    for (let into = 0; into < from; ++into) {
+		let d = distances[from][into];
+		if (d < result.distance) {
+		    result.distance = d;
+		    result.from = from;
+		    result.into = into;
+		} 
 	    }
 	}
+	if (!allowMoreThanMax) {
+	    mergeAllowed = allowMergeWithClusterCardinality(result.from, result.into, clusters, $('#input_num_max').val());
+	    if (!mergeAllowed) {
+		console.log("Abort merge " + result.from + " with " + result.into + ": cluster size exceed max");
+		distances[result.from][result.into] = distances[result.into][result.from] = Number.MAX_VALUE;
+		// reset search for result.
+		result.from = result.into = -1;
+		result.distance = Number.MAX_VALUE;
+		// todo: get out if no  more merge is allowed due to cardinality constraints. Keep track of results tried
+	    }
+	} else {
+	    mergeAllowed = true;
+	}
     }
-    result.distance = min;
     return result;
 }
 
@@ -89,7 +113,7 @@ function agglomerativeHierarchicalClustering(clusters, distances, mergeFunc) {
     while (keepMerging(clusters)) {
 	//while(linkage.length < numElem-1) {
 	//console.log(numLeft + " clusters left");
-	let merge = findClustersToMerge(distances);
+	let merge = findClustersToMerge(distances, clusters);
 	linkage.push(merge);
 	mergeFunc(clusters, distances, merge);
 	console.log("Merge " + merge.from + " into " + merge.into + " with dist:" + merge.distance);
