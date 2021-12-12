@@ -113,9 +113,12 @@ function callClustering(min, max, w1, w2, w3)  {
 	window.linkage = agglomerativeHierarchicalClustering(clusters,
 							     flyweightDistances.distances,
 							     mergeMinLink);
+
+	let half = Math.round(flyweightDistances.numElem/2);
 	analyseClustering( $("#input_num_min.valueAsNumber"),
 			   $("#input_num_max.valueAsNumber"),
-			   Math.round(flyweightDistances.numElem/2));
+			   half);
+	$("#nb_clusters").val(half);
     } else {
 	alert("Clustering deja calculé");
     }
